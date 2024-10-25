@@ -25,15 +25,15 @@ class Batch(models.Model):
 
 class Startup(models.Model):
     PHASE_CHOICES = [
-        ('brainstorming', 'Brainstorming'),
-        ('fundraising', 'Fundraising'),
-        ('scaling', 'Scaling'),
-        ('established', 'Established'),
+        ('Brainstorming', 'Brainstorming'),
+        ('Fundraising', 'Fundraising'),
+        ('Scaling', 'Scaling'),
+        ('Established', 'Established'),
     ]
 
     STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
     ]
 
     PRIORITY_CHOICES = [
