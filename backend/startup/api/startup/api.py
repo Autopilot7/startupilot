@@ -9,8 +9,8 @@ from .serializers import StartupSerializer, BatchSerializer, FounderSerializer, 
 from useraccount.models import User
 
 @api_view(['GET'])
-@authentication_classes([])
-@permission_classes([])
+# @authentication_classes([])
+# @permission_classes([])
 def startups_list(request):
     # Auth
     user = None
@@ -22,11 +22,9 @@ def startups_list(request):
     except Exception:
         user = None
 
-    favorites = []
     startups = Startup.objects.all()
 
     # Filter
-    is_favorites = request.GET.get('is_favorites', '')
     category_ids = request.GET.getlist('category_ids', [])
     founder_ids = request.GET.getlist('founder_ids', [])
     batch_id = request.GET.get('batch_id', '')
@@ -49,22 +47,16 @@ def startups_list(request):
     if status:
         startups = startups.filter(status=status)
 
-    # Handle favorites
-    if user:
-        favorites = list(startups.filter(founders__in=[user]).values_list('id', flat=True))
-
-    # Serialize the data
     serializer = StartupSerializer(startups, many=True)
 
     return JsonResponse({
         'data': serializer.data,
-        'favorites': favorites
     })
 
 
 @api_view(['GET'])
-@authentication_classes([])
-@permission_classes([])
+# @authentication_classes([])
+# @permission_classes([])
 def startups_detail(request, pk):
     try:
         startup = Startup.objects.get(pk=pk)
@@ -77,7 +69,7 @@ def startups_detail(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Ensures that the user must be authenticated
+# @permission_classes([IsAuthenticated])  # Ensures that the user must be authenticated
 def create_startup(request):
     form = StartupForm(request.POST, request.FILES)
 
