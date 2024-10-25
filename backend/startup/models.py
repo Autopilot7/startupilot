@@ -12,10 +12,17 @@ class Founder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+class Batch(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.name
 
 class Startup(models.Model):
     PHASE_CHOICES = [
@@ -36,33 +43,13 @@ class Startup(models.Model):
     description = models.TextField()
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    contact_email = models.EmailField()
+    contact_email = models.EmailField(unique=True)
     linkedin_url = models.URLField(null=True, blank=True)
     facebook_url = models.URLField(null=True, blank=True)
     categories = models.ManyToManyField(Category, related_name="startups")
     founders = models.ManyToManyField(Founder, related_name="startups")
+    batch = models.ForeignKey(Batch, related_name="startups", on_delete=models.CASCADE, null=True, blank=True)
     pitch_deck = models.FileField(upload_to='pitchdecks/')
 
     def __str__(self):
         return self.name
-
-class StartupCategory(models.Model):
-    startup = models.ForeignKey(Startup, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('startup', 'category')
-
-    def __str__(self):
-        return f"{self.startup.name} - {self.category.name}"
-
-
-class StartupFounder(models.Model):
-    startup = models.ForeignKey(Startup, on_delete=models.CASCADE)
-    founder = models.ForeignKey(Founder, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('startup', 'founder')
-
-    def __str__(self):
-        return f"{self.startup.name} - {self.founder.first_name} {self.founder.last_name}"

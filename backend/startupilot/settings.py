@@ -114,7 +114,6 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'startup',
-    'founder',
     'useraccount'
 ]
 
