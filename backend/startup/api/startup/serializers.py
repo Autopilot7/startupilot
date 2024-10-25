@@ -18,11 +18,40 @@ class BatchSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class StartupSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True)
-    founders = FounderSerializer(many=True)
-    batch = BatchSerializer(many=False)
+    founders = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+    categories = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     class Meta:
         model = Startup
-        fields = ['id', 'name', 'short_description', 'description', 'phase', 'status', 'contact_email', 'linkedin_url', 
-                  'facebook_url', 'categories', 'founders', 'batch', 'pitch_deck', 'priority']
+        fields = [
+            'name',
+            'short_description',
+            'description',
+            'phase',
+            'status',
+            'priority',
+            'contact_email',
+            'linkedin_url',
+            'facebook_url',
+            'founders',
+            'categories',
+            'batch',
+            'pitch_deck'
+        ]
+
+    def create(self, validated_data):
+        founders_data = validated_data.pop('founders', [])
+        categories_data = validated_data.pop('categories', [])
+         
+        startup = Startup.objects.create(**validated_data)
+         
+        for category_name in categories_data:
+            category, created = Category.objects.get_or_create(name=category_name)
+            startup.categories.add(category)
+         
+        for founder_name in founders_data:
+            first_name, last_name = founder_name.split(" ", 1)   
+            founder, created = Founder.objects.get_or_create(first_name=first_name, last_name=last_name)
+            startup.founders.add(founder)
+        
+        return startup

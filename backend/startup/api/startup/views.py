@@ -1,12 +1,11 @@
 from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from ...forms import StartupForm
-from ...models import Startup, Founder, Category, Batch
-from .serializers import StartupSerializer, BatchSerializer, FounderSerializer, CategorySerializer
-from useraccount.models import User
+from ...models import Startup
+from .serializers import StartupSerializer
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -19,6 +18,10 @@ def startups_list(request):
     batch_id = request.GET.get('batch_id', '')
     phase = request.GET.get('phase', '')
     status = request.GET.get('status', '')
+    priority = request.GET.get('priority', '')
+
+    for startup in startups:
+        print(startup.name, startup.status)
 
     # Filtering startups based on query parameters
     if category_ids:
@@ -35,6 +38,9 @@ def startups_list(request):
 
     if status:
         startups = startups.filter(status=status)
+
+    if priority:
+        startups = startups.filter(priority=priority)
 
     serializer = StartupSerializer(startups, many=True)
 
@@ -55,18 +61,15 @@ def startups_detail(request, pk):
     
     return JsonResponse(serializer.data)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_new_startup(request):
+    serializer = StartupSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-# @api_view(['POST'])
-#@permission_classes([IsAuthenticated])  # Ensures that the user must be authenticated
-# def create_startup(request):
-#     form = StartupForm(request.POST, request.FILES)
+    pitch_deck_file = request.FILES.get('pitch_deck')
+    if pitch_deck_file and pitch_deck_file.size > 1 * 1024 * 1024:  # 1 MB limit
+        return Response({"error": "Pitch deck file size must be under 1MB."}, status=status.HTTP_400_BAD_REQUEST)
 
-#     if form.is_valid():
-#         startup = form.save(commit=False)
-#         startup.founders.add(request.user)  # Assuming the user is the founder or you want to associate it with the user
-#         startup.save()
- 
-#         return JsonResponse({'success': True, 'startup_id': str(startup.id)}, status=201)
-#     else:
-#         print('error', form.errors)
-#         return JsonResponse({'errors': form.errors.as_json()}, status=400)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
