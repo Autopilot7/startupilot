@@ -16,7 +16,7 @@ def startups_list(request):
     # Filter
     categories_names = request.GET.getlist('categories_names', [])
     founders_names = request.GET.getlist('founders_names', [])
-    batch_id = request.GET.get('batch_id', '')
+    batch_name = request.GET.get('batch_name', '')
     phase = request.GET.get('phase', '')
     status = request.GET.get('status', '')
     priority = request.GET.get('priority', '')
@@ -31,8 +31,11 @@ def startups_list(request):
     if founders_names:
         startups = startups.filter(founders__name__in=founders_names).distinct()
 
-    if batch_id:
-        startups = startups.filter(batch_id=batch_id)
+   
+    if batch_name:
+        # Filter startups by batch name
+        startups = startups.filter(batch__name=batch_name)
+
 
     if phase:
         startups = startups.filter(phase=phase)

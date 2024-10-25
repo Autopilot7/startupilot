@@ -31,6 +31,8 @@ class StartupSerializer(serializers.ModelSerializer):
         required=False
     )
 
+    batch_name = serializers.CharField(source='batch.name', read_only=True)  # Add this line
+
     class Meta:
         model = Startup
         fields = [
@@ -45,7 +47,7 @@ class StartupSerializer(serializers.ModelSerializer):
             'facebook_url',
             'founders',
             'categories',
-            'batch',
+            'batch_name',  # Change this line
             'pitch_deck'
         ]
 
