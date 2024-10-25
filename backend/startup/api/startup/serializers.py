@@ -18,8 +18,18 @@ class BatchSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class StartupSerializer(serializers.ModelSerializer):
-    founders = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
-    categories = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+    founders = serializers.SlugRelatedField(
+        many=True, 
+        slug_field='name', 
+        queryset=Founder.objects.all(),
+        required=False
+    )
+    categories = serializers.SlugRelatedField(
+        many=True, 
+        slug_field='name', 
+        queryset=Category.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Startup
