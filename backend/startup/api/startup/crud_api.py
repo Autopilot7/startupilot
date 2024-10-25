@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from ...models import Startup
 from .serializers import StartupSerializer
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def startups_list(request):
@@ -60,6 +61,7 @@ def startups_detail(request, pk):
     serializer = StartupSerializer(startup, many=False)
     
     return JsonResponse(serializer.data)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

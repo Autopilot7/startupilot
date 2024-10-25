@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import startups_list, startups_detail, create_new_startup
+from .crud_api import startups_list, startups_detail, create_new_startup
 
 urlpatterns = [
     path('',startups_list, name='startups_list' ),
