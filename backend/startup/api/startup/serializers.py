@@ -10,7 +10,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class FounderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Founder
-        fields = ['id', 'first_name', 'last_name', 'email']
+        fields = ['id', 'name', 'email']
 
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
