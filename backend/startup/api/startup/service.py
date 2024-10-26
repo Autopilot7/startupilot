@@ -1,4 +1,3 @@
-from ...models import Startup, Founder, Batch, Category
 from django.db.models import Count, Q
 
 def filter_startups(queryset,
@@ -8,6 +7,9 @@ def filter_startups(queryset,
     status=None,
     priority=None
 ):
+    """
+    Filters startups based on the provided parameters.
+    """
     if categories_names: 
         queryset = queryset.filter(categories__name__in=categories_names) \
                            .annotate(num_categories=Count('categories', filter=Q(categories__name__in=categories_names))) \
@@ -27,3 +29,18 @@ def filter_startups(queryset,
 
     return queryset
 
+def get_column_data(startup, columns):
+    """
+    Collects data for specified columns.
+    """
+    data = {}
+    for column in columns:
+        if column == "categories":
+            data[column] = ", ".join([c.name for c in startup.categories.all()])
+        elif column == "founders":
+            data[column] = ", ".join([f.name for f in startup.founders.all()])
+        elif column == "batch":
+            data[column] = startup.batch.name if startup.batch else ""
+        else:
+            data[column] = getattr(startup, column, "")
+    return data
