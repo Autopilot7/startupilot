@@ -8,12 +8,14 @@ from ...models import Startup, Founder, Batch, Category
 from .serializers import StartupSerializer
 from .service import filter_startups
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def startups_list(request):
     startups = Startup.objects.all()
-
     categories_names = request.GET.getlist('categories_names', [])
+    categories_names = request.GET.getlist('categories_names', [])
+    founders_names = request.GET.getlist('founders_names', [])
     batch_name = request.GET.get('batch_name', '')
     phase = request.GET.get('phase', '')
     status = request.GET.get('status', '')
