@@ -99,7 +99,6 @@ def create_startup(data):
         batch, created = Batch.objects.get_or_create(name=batch_name)
         data['batch'] = batch
 
-
     # Handle avatar:
     avatar_url = data.pop("avatar", "/media/avatar/default.png")
     avatar = get_avatar_by_url(avatar_url)
@@ -118,4 +117,65 @@ def create_startup(data):
     serializer.is_valid(raise_exception=True)
     startup = serializer.save(founders=founder_objects, categories=category_objects)
 
+    return serializer.data
+
+def update_startup(startup, data):
+    """
+    Updates an existing Startup instance based on the provided data.
+    """
+    # Update founders
+    founders_data = data.get("founders")
+    if founders_data is not None:
+        founder_objects = []
+        for founder_info in founders_data:
+            founder_name = founder_info.get("name", "")
+            founder_email = founder_info.get("email", "")
+            founder, created = Founder.objects.get_or_create(
+                name=founder_name,
+                email=founder_email,
+                defaults={'shorthand': f"{founder_name} ({founder_email})" if founder_email else founder_name}
+            )
+            founder_objects.append(founder)
+        # Set the updated founder list
+        startup.founders.set(founder_objects)
+
+    # Update categories
+    categories_data = data.get("categories")
+    if categories_data is not None:
+        category_objects = []
+        for category_name in categories_data:
+            category, created = Category.objects.get_or_create(name=category_name)
+            category_objects.append(category)
+        # Set the updated category list
+        startup.categories.set(category_objects)
+
+    # Update batch
+    batch_name = data.get("batch")
+    if batch_name:
+        batch, created = Batch.objects.get_or_create(name=batch_name)
+        startup.batch = batch
+
+    # Update avatar
+    avatar_url = data.pop("avatar", None)
+    if avatar_url:
+        if startup.avatar:
+            startup.avatar.delete()
+        startup.avatar = get_avatar_by_url(avatar_url)
+
+    # Update pitchdeck
+    pitchdeck_url = data.pop("pitch_deck", None)
+    if pitchdeck_url:
+        if startup.pitch_deck:
+            startup.pitch_deck.delete()
+        startup.pitch_deck = get_pitchdeck_by_url(pitchdeck_url)
+
+    # Update remaining fields
+    for field, value in data.items():
+        if hasattr(startup, field) and value is not None:
+            setattr(startup, field, value)
+
+    # Save the startup instance
+    startup.save()
+
+    serializer = StartupSerializer(startup)
     return serializer.data
