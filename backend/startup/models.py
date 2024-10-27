@@ -36,7 +36,7 @@ class Batch(models.Model):
 class Pitchdeck(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     pitchdeck = models.FileField(upload_to='pitchdecks/')
-    name = models.CharField(max_length=255, blank=True, editable=False)  # Field to store the URL
+    name = models.CharField(unique=True, max_length=255, blank=True, editable=False)  # Field to store the URL
 
     def __str__(self) -> str:
         return self.name if self.name else "No File"
@@ -53,7 +53,7 @@ class Pitchdeck(models.Model):
 class Avatar(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avatar = models.ImageField(upload_to='avatar/')
-    name = models.CharField(max_length=255, blank=True, editable=False)  # Add the name field
+    name = models.CharField(unique=True, max_length=255, blank=True, editable=False)  # Add the name field
 
     def __str__(self) -> str:
         return self.name if self.name else "No Image"
