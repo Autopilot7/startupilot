@@ -1,63 +1,36 @@
 from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework import generics, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from ...models import Startup
 from .serializers import StartupSerializer
-from .service import filter_startups, get_startup_by_id, create_startup
+from django.db.models import Case, When, Value, IntegerField
+from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
+from rest_framework.filters import SearchFilter
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def startups_list(request):
-    startups = Startup.objects.all()
-    query = request.GET.get('query', '')
-    categories_names = request.GET.getlist('categories_names', [])
-    categories_names = request.GET.getlist('categories_names', [])
-    batch_name = request.GET.get('batch_name', '')
-    phase = request.GET.get('phase', '')
-    status = request.GET.get('status', '')
-    priority = request.GET.get('priority', '')
+from .filter import StartupFilter
 
-    startups = filter_startups(
-        query = query,
-        queryset=startups,
-        categories_names=categories_names,  
-        batch_name=batch_name,
-        phase=phase,
-        status=status,
-        priority=priority
-    )
+class StartupListView(generics.ListAPIView):
+    queryset = Startup.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = StartupSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = StartupFilter
+    search_fields = ['$name'] 
+ 
 
-    serializer = StartupSerializer(startups, many=True)
-    return JsonResponse({'data': serializer.data})
+class StartupDetailView(generics.RetrieveAPIView):
+    queryset = Startup.objects.all()   
+    serializer_class = StartupSerializer
+    permission_classes = [AllowAny]  
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def startups_detail(request, pk):
-    startup = get_startup_by_id(pk)
-    
-    if not startup:
-        return JsonResponse({'error': 'Startup not found'}, status=404)
-
-    serializer = StartupSerializer(startup)
-    
-    return JsonResponse(serializer.data)
-
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def create_new_startup(request):
-    """
-    API endpoint to create a new Startup instance.
-    """
-    data = request.data.copy()
-    try:
-        result = create_startup(data)
-    except Exception as e:
-        return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response(result, status=status.HTTP_201_CREATED)
+    def get_object(self):
+        try:
+            startup = Startup.objects.get(pk=self.kwargs['pk'])
+            return startup
+        except Startup.DoesNotExist:
+            raise Http404
