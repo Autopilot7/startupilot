@@ -6,3 +6,4 @@ urlpatterns = [
     path('', StartupListView.as_view(), name='startups-list'),
     path('<uuid:pk>/', StartupDetailView.as_view(), name='startup-detail')
 ]
+
