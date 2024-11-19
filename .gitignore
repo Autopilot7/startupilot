@@ -6,3 +6,4 @@ backend/media/pitchdecks
 backend/media/export
 backend/media/avatar
 backend/core/migrations
+.DS_Store
