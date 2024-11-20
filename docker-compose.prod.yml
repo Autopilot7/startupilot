@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - .env  
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
+  storage:
+    image: minio/minio:latest
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+      - minio_config:/root/.minio
+    command: server /data
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      # - "443:443"
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+    environment:
+      - FILE_DOMAIN=startupilot-files.cloud.strixthekiet.me
+      - SERVER_DOMAIN=startupilot.cloud.strixthekiet.me
+      - MINIO_WEB_CONSOLE_DOMAIN=startupilot-minio.cloud.strixthekiet.me
+    mem_limit: 64M
+    memswap_limit: 1G
+      
+volumes:
+  postgres_data:

@@ -1,4 +1,4 @@
-server {
+{% comment %} server {
     listen 80;
     listen [::]:80;
     root /usr/share/nginx/html;
@@ -7,7 +7,7 @@ server {
     location / {
         try_files $uri /index.html;
     }
-}
+} {% endcomment %}
 
 server {
     listen 80;
@@ -21,5 +21,31 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
 
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${FILE_DOMAIN};
+
+    location / {
+        proxy_pass http://storage:9000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${MINIO_WEB_CONSOLE_DOMAIN};
+
+    location / {
+        proxy_pass http://storage:9090/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
