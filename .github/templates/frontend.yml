@@ -1,0 +1,78 @@
+name: Frontend
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  check_folder_frontend_changed:
+    name: Check if frontend folder changed
+    runs-on: ubuntu-latest
+    outputs:
+      is_changed: ${{ steps.changes.outputs.frontend }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+
+      # run only if "frontend" files were changed
+      - name: frontend is changed
+        if: steps.changes.outputs.frontend == 'true'
+        run: echo "Folder frontend has changed"
+
+      # run only if "frontend" files were not changed
+      - name: frontend is not changed
+        if: steps.changes.outputs.frontend == 'false'
+        run: echo "Folder frontend has not changed"
+
+  build_and_deploy:
+    name: Build NextJs frontend and Run Nginx on Server
+    runs-on: ubuntu-latest
+    needs: [check_folder_frontend_changed]
+    if: needs.check_folder_frontend_changed.outputs.is_changed == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Add environment variables
+        run: |
+          cd frontend
+          echo "${{ secrets.frontend_ENV }}" > .env
+
+    # TODO: Rewrite the build for nextjs
+    #   - name: Build frontend
+    #     run: |
+    #       cd frontend
+    #       npm run build
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          cd ~/.ssh/ 
+          touch id_rsa && touch known_hosts && chmod 600 id_rsa
+          echo "${{ secrets.SERVER_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+
+      - name: Add Droplet to known hosts
+        run: ssh-keyscan ${{ secrets.SERVER_IP_ADDRESS}} >> ~/.ssh/known_hosts
+
+      - name: Move frontend build to nginx server and rerun nginx
+        run: |
+          scp -r ./frontend/build/ ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}}:.
+          ssh ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}} 'docker cp ./build/. nginx:/usr/share/nginx/html'
+          ssh ${{ secrets.SERVER_USER}}@${{ secrets.SERVER_IP_ADDRESS}} 'docker exec nginx nginx -s reload'
