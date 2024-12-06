@@ -11,6 +11,7 @@ from django.db import transaction
 
 from ..models import Startup, Category, Batch, Priority, Phase, Person, Advisor, Status, Note, StartupMembership
 from .serializers import StartupSerializer
+from .pagination import OffsetLimitPagination
 
 class CreateStartupView(APIView):
     permission_classes = [IsAuthenticated]
@@ -148,6 +149,8 @@ class StartupListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = StartupFilter
     search_fields = ['$name'] 
+    pagination_class = OffsetLimitPagination
+
 
 class StartupDetailView(APIView):
     """
